@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-load_dotenv(Path(__file__).resolve().parent / ".env")
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 API_KEY = os.environ["GEMINI_API_KEY"]
 DEVICE = "plughw:3,0"  # plug = let ALSA resample 24kHz → device rate cleanly

@@ -1,0 +1,19 @@
+# beemoAI Python dependencies (install into your venv with `pip install -r requirements.txt`)
+#
+# NOTE: beemoAI also requires the `bot` runtime framework, which is provided by
+# the Pi's local install (the gitignored .bot/ and .botos/ directories) and is
+# NOT a PyPI package. See README.md.
+
+google-genai==1.75.0    # Gemini Live / TTS client (google.genai)
+python-dotenv==1.2.2    # loads GEMINI_API_KEY from .env
+pillow==12.1.1          # PIL — face/screen rendering
+numpy==2.4.4            # audio buffer math
+sounddevice==0.5.5      # audio capture/playback
+vosk==0.3.45            # offline wake-word / speech recognition
+
+# Raspberry Pi GPIO / hardware (only needed on the Pi itself)
+gpiod==2.4.1            # button matrix / GPIO line access
+spidev==3.8             # SPI display
+
+# System packages — install via apt on Raspberry Pi OS, not pip:
+#   sudo apt install python3-gpiozero python3-picamera2
