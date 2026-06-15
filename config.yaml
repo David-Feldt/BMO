@@ -39,15 +39,16 @@ components:
 
   screen_display:
     file: components/screen_display.py
-    groups: [screen, dashboard]
+    groups: [screen, dashboard, gemini]
     channels:
       /s/screen/display: read
 
   beemo_face:
     file: components/beemo_face.py
-    groups: [screen, dashboard]
+    groups: [screen, dashboard, gemini]
     channels:
       /s/screen/display: write
+      /s/speaker/audio: read
 
   usb_microphone:
     file: components/usb_microphone.py

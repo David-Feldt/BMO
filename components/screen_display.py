@@ -3,6 +3,7 @@ import base64
 import io
 
 import bot
+import numpy as np
 import spidev
 import gpiod
 from gpiod.line import Direction, Value
@@ -103,15 +104,11 @@ def _set_window(spi, lines, x0, y0, x1, y1):
 
 def _show_image(spi, lines, image):
     img = image.resize((WIDTH, HEIGHT)).convert("RGB")
-    pixels = img.tobytes()
-
-    rgb565 = bytearray(WIDTH * HEIGHT * 2)
-    for i in range(0, len(pixels), 3):
-        r, g, b = pixels[i], pixels[i + 1], pixels[i + 2]
-        color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
-        j = (i // 3) * 2
-        rgb565[j] = (color >> 8) & 0xFF
-        rgb565[j + 1] = color & 0xFF
+    arr = np.asarray(img, dtype=np.uint16)
+    r, g, b = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2]
+    rgb565 = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
+    # Big-endian (high byte first), matching the panel's RGB565 byte order.
+    rgb565 = rgb565.astype(">u2").tobytes()
 
     _set_window(spi, lines, 0, 0, WIDTH - 1, HEIGHT - 1)
     _write_data_bulk(spi, lines, rgb565)
@@ -136,16 +133,36 @@ async def main():
     splash = _text_to_image("beemoAI\nscreen ready")
     _show_image(spi, lines, splash)
 
-    try:
+    # The producer (e.g. beemo_face) can publish faster than the SPI panel can
+    # draw. Drain incoming frames in a separate task and only ever render the
+    # most recent one, so the display can never fall behind / accumulate lag.
+    latest = None
+    new_frame = asyncio.Event()
+
+    async def _receive():
+        nonlocal latest
         async for msg in bot.subscribe("/s/screen/display"):
+            latest = msg
+            new_frame.set()
+
+    async def _render():
+        nonlocal latest
+        while True:
+            await new_frame.wait()
+            new_frame.clear()
+            msg = latest
+            if msg is None:
+                continue
             if msg.get("type") == "image":
                 raw = base64.b64decode(msg["data"])
                 img = Image.open(io.BytesIO(raw))
                 _show_image(spi, lines, img)
-
             elif msg.get("type") == "text":
                 img = _text_to_image(msg["text"])
                 _show_image(spi, lines, img)
+
+    try:
+        await asyncio.gather(_receive(), _render())
     finally:
         lines.set_value(BL_PIN, Value.INACTIVE)
         spi.close()

@@ -1,0 +1,23 @@
+[Unit]
+Description=beemoAI - BMO Gemini Live voice + face (gemini group)
+# gemini_live needs the internet to reach the Gemini Live API.
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=david
+Group=david
+# Hardware access: SPI/GPIO screen, ALSA mic/speaker, etc.
+SupplementaryGroups=audio video spi i2c gpio input render
+WorkingDirectory=/home/david/beemoAI
+# GEMINI_API_KEY is loaded from /home/david/beemoAI/.env by the component itself.
+ExecStart=/usr/local/bin/bot run gemini
+# botOS supervises individual components, but restart the whole stack if it dies.
+Restart=on-failure
+RestartSec=3
+# Give USB mic / HiFiBerry / network a moment on a cold boot.
+TimeoutStartSec=30
+
+[Install]
+WantedBy=multi-user.target
