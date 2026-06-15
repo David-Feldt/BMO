@@ -1,4 +1,8 @@
-# beemoAI
+# BMO AI Assistant
+
+<p align="center">
+  <img src="docs/bmo.jpg" alt="The BMO AI assistant — a teal BMO-inspired Raspberry Pi robot with a pixel face" width="320">
+</p>
 
 A Raspberry Pi robot built on a small publish/subscribe component framework.
 Independent components (camera, screen "face", microphone, speaker, buttons,
@@ -11,7 +15,10 @@ Every capability is a **component** — a Python module under [components/](comp
 that subscribes to and/or publishes on channels (e.g. `/s/microphone/audio`,
 `/s/speaker/audio`, `/s/camera/frame`, `/s/screen/display`, `/c/motor/drive`).
 Components, their channel permissions, and their `groups` are declared in
-[config.yaml](config.yaml) and wired together at runtime by the `bot` framework.
+[config.yaml](config.yaml) and wired together at runtime by
+[**botOS**](https://github.com/David-Feldt/botOS) — my own robot runtime that
+handles the TCP transport, the pub/sub channel router connecting components, and
+the process launcher (`bot run`).
 
 ```
 mic ─▶ /s/microphone/audio ─▶ gemini_live ─▶ /s/speaker/audio ─▶ speaker
@@ -32,10 +39,12 @@ connection cap.
 - Raspberry Pi (tested with Python 3.13) with the audio/GPIO hardware wired up
   (USB microphone, MAX98357A / HiFiBerry speaker amp, SPI display, button matrix,
   camera, motor driver — components can be enabled/disabled in `config.yaml`).
-- The **`bot` runtime framework**. This is the local robot OS that provides the
-  `bot` Python module and the `bot run` launcher. It lives in the (gitignored)
-  `.bot/` and `.botos/` directories on the Pi and is **not** a PyPI package — a
-  fresh clone needs it installed separately before the components will run.
+- [**botOS**](https://github.com/David-Feldt/botOS) — my robot runtime framework
+  that provides the TCP transport, the pub/sub channel router that connects the
+  components, and the `bot` Python module / `bot run` launcher. It lives in the
+  (gitignored) `.bot/` and `.botos/` directories on the Pi and is **not** a PyPI
+  package — a fresh clone needs botOS installed separately before the components
+  will run.
 - A Google AI Studio API key for the Gemini features.
 
 ## Setup
